@@ -24,7 +24,8 @@ export default async function Page(props: PageProps) {
   const params = await props.params
 
   try {
-    const { default: MDXContent, toc, metadata } = await importPage(params.mdxPath)
+    const result = await importPage(params.mdxPath)
+    const { default: MDXContent, toc, metadata, ...rest } = result
     const Wrapper = useMDXComponents().wrapper
 
     if (!Wrapper) {
@@ -32,7 +33,7 @@ export default async function Page(props: PageProps) {
     }
 
     return (
-      <Wrapper toc={toc} metadata={metadata}>
+      <Wrapper toc={toc} metadata={metadata} {...rest}>
         <MDXContent {...props} params={params} />
       </Wrapper>
     )
