@@ -20,7 +20,7 @@ Official documentation site for SealTrust - Cryptographic Verification and Encry
 
 This repository contains the documentation website for SealTrust, built with [Nextra](https://nextra.site/).
 
-**Live Site:** [docs.sealtrust.app](https://docs.sealtrust.app) *(coming soon)*
+**Live Site:** [docs.sealtrust.app](https://docs.sealtrust.app)
 
 ---
 
@@ -36,8 +36,6 @@ pnpm dev
 # Build for production
 pnpm build
 ```
-
-Open http://localhost:3000
 
 ---
 
