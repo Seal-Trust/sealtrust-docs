@@ -1,0 +1,155 @@
+---
+title: Smart Contracts
+---
+
+# Smart Contracts
+
+SealTrust uses Sui Move smart contracts for on-chain dataset registration and verification.
+
+## Package Information
+
+| Property | Value |
+|----------|-------|
+| **Package ID** | `0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e` |
+| **Module** | `app::sealtrust` |
+| **Network** | Sui Testnet |
+
+## Core Structures
+
+### DatasetNFT
+
+The primary on-chain record for a verified dataset.
+
+```move
+public struct DatasetNFT has key, store {
+    id: UID,
+    name: vector<u8>,
+    description: vector<u8>,
+    format: vector<u8>,
+    size: u64,
+    original_hash: vector<u8>,
+    walrus_blob_id: vector<u8>,
+    seal_policy_id: vector<u8>,
+    verification_timestamp: u64,
+    owner: address,
+    enclave_signature: vector<u8>,
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `UID` | Unique object identifier |
+| `name` | `vector<u8>` | Dataset display name |
+| `description` | `vector<u8>` | Dataset description |
+| `format` | `vector<u8>` | File format (CSV, JSON, etc.) |
+| `size` | `u64` | File size in bytes |
+| `original_hash` | `vector<u8>` | SHA-256 hash (32 bytes) |
+| `walrus_blob_id` | `vector<u8>` | Encrypted blob location |
+| `seal_policy_id` | `vector<u8>` | Seal access policy |
+| `verification_timestamp` | `u64` | Unix timestamp (ms) |
+| `owner` | `address` | Registrant's address |
+| `enclave_signature` | `vector<u8>` | TEE attestation signature |
+
+### DatasetVerification
+
+Internal structure for BCS serialization with Nautilus.
+
+```move
+public struct DatasetVerification has copy, drop {
+    dataset_id: vector<u8>,
+    name: vector<u8>,
+    description: vector<u8>,
+    format: vector<u8>,
+    size: u64,
+    original_hash: vector<u8>,
+    walrus_blob_id: vector<u8>,
+    seal_policy_id: vector<u8>,
+    timestamp: u64,
+    uploader: vector<u8>,
+}
+```
+
+## Entry Functions
+
+### register_dataset
+
+Registers a new dataset with TEE-verified metadata.
+
+```move
+public entry fun register_dataset(
+    enclave: &Enclave<SEALTRUST>,
+    name: vector<u8>,
+    description: vector<u8>,
+    format: vector<u8>,
+    size: u64,
+    original_hash: vector<u8>,
+    walrus_blob_id: vector<u8>,
+    seal_policy_id: vector<u8>,
+    timestamp: u64,
+    signature: vector<u8>,
+    clock: &Clock,
+    ctx: &mut TxContext,
+)
+```
+
+**Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `enclave` | Reference to registered Nautilus enclave |
+| `name` | Dataset name (UTF-8 bytes) |
+| `description` | Dataset description (UTF-8 bytes) |
+| `format` | File format identifier |
+| `size` | File size in bytes |
+| `original_hash` | SHA-256 hash of unencrypted data |
+| `walrus_blob_id` | Walrus blob identifier |
+| `seal_policy_id` | Seal encryption policy |
+| `timestamp` | Verification timestamp |
+| `signature` | TEE signature from Nautilus |
+| `clock` | Sui Clock object |
+| `ctx` | Transaction context |
+
+**Effects:**
+- Verifies TEE signature matches enclave public key
+- Creates new DatasetNFT object
+- Transfers NFT to caller
+- Emits `DatasetRegistered` event
+
+## Events
+
+### DatasetRegistered
+
+Emitted when a new dataset is registered.
+
+```move
+public struct DatasetRegistered has copy, drop {
+    dataset_id: ID,
+    name: vector<u8>,
+    original_hash: vector<u8>,
+    owner: address,
+    timestamp: u64,
+}
+```
+
+## View Functions
+
+### get_dataset_hash
+
+Returns the original hash of a dataset.
+
+```move
+public fun get_dataset_hash(nft: &DatasetNFT): vector<u8>
+```
+
+### get_dataset_owner
+
+Returns the owner address of a dataset.
+
+```move
+public fun get_dataset_owner(nft: &DatasetNFT): address
+```
+
+## Source Code
+
+Full source code available at:
+[github.com/Seal-Trust/sealtrust-contracts](https://github.com/Seal-Trust/sealtrust-contracts)

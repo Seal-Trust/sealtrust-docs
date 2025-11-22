@@ -1,0 +1,108 @@
+---
+title: Manage Access
+---
+
+# Manage Access
+
+Control who can decrypt your registered datasets using Seal allowlists.
+
+## Access Control Overview
+
+SealTrust uses **Seal threshold encryption** with **allowlist-based access control**:
+
+- Each dataset has an associated allowlist
+- Only addresses on the allowlist can decrypt
+- The dataset owner has admin capabilities
+
+## Adding Users
+
+import { Steps } from 'nextra/components'
+
+<Steps>
+
+### Navigate to Dataset
+
+Go to your dataset's management page at `sealtrust.app/dataset/[id]`.
+
+### Open Access Management
+
+Click the "Access Management" tab.
+
+### Add Address
+
+1. Click "Add User"
+2. Enter the Sui wallet address
+3. Click "Add to Allowlist"
+4. Sign the transaction
+
+</Steps>
+
+## Removing Users
+
+<Steps>
+
+### Navigate to Access Management
+
+Go to your dataset's Access Management tab.
+
+### Remove Address
+
+1. Find the user in the list
+2. Click the remove button
+3. Confirm and sign the transaction
+
+</Steps>
+
+## Checking Authorization
+
+To check if an address is authorized:
+
+```typescript
+import { allowlistService } from '@/lib/allowlist-service';
+
+const isAuthorized = await allowlistService.isAuthorized(
+  allowlistId,
+  userAddress,
+  suiClient
+);
+```
+
+## Viewing All Members
+
+```typescript
+const members = await allowlistService.getAllowlistMembers(
+  allowlistId,
+  suiClient
+);
+
+console.log('Authorized addresses:', members);
+```
+
+## Best Practices
+
+> [!TIP]
+> **Security Recommendations:**
+> - Regularly audit your allowlist
+> - Remove access when no longer needed
+> - Use specific addresses, not wildcards
+> - Keep your admin capability secure
+
+## Technical Details
+
+The allowlist is a shared Sui object:
+
+```move
+public struct Allowlist has key {
+    id: UID,
+    name: String,
+    list: vector<address>,
+}
+
+public struct Cap has key {
+    id: UID,
+    allowlist_id: ID,
+}
+```
+
+- `Allowlist` - Shared object containing authorized addresses
+- `Cap` - Admin capability for managing the allowlist

@@ -1,0 +1,213 @@
+---
+title: API Reference
+---
+
+# API Reference
+
+SealTrust provides APIs for dataset verification and management.
+
+## Nautilus TEE Endpoints
+
+Base URL: `https://nautilus.sealtrust.app`
+
+### Health Check
+
+Check if the Nautilus service is running.
+
+```http
+GET /health
+```
+
+**Response:**
+```
+OK
+```
+
+### Verify Metadata
+
+Verify dataset metadata and get TEE signature.
+
+```http
+POST /verify_metadata
+Content-Type: application/json
+```
+
+**Request Body:**
+
+```json
+{
+  "metadata": {
+    "dataset_id": [98, 121, 116, 101, 115],
+    "name": [77, 121, 32, 68, 97, 116, 97],
+    "description": [68, 101, 115, 99],
+    "format": [67, 83, 86],
+    "size": 1024000,
+    "original_hash": [/* 32 bytes */],
+    "walrus_blob_id": [/* blob id bytes */],
+    "seal_policy_id": [/* policy id bytes */],
+    "timestamp": 1700000000000,
+    "uploader": [/* address bytes */]
+  }
+}
+```
+
+> [!NOTE]
+> All string fields are sent as byte arrays (UTF-8 encoded).
+
+**Response:**
+
+```json
+{
+  "response": {
+    "timestamp_ms": 1700000000000,
+    "data": {
+      "dataset_id": [98, 121, 116, 101, 115],
+      "name": [77, 121, 32, 68, 97, 116, 97],
+      "original_hash": [/* 32 bytes */]
+    }
+  },
+  "signature": "0x1234...abcd"
+}
+```
+
+### Get Attestation
+
+Retrieve the enclave attestation document.
+
+```http
+GET /get_attestation
+```
+
+**Response:**
+
+```json
+{
+  "attestation": "base64-encoded-attestation-document"
+}
+```
+
+## Frontend Hooks
+
+### useSealTrust
+
+Main hook for interacting with SealTrust.
+
+```typescript
+import { useSealTrust } from '@/hooks/useSealTrust';
+
+const {
+  getAllDatasets,
+  getDatasetDetails,
+  getDatasetsByOwner,
+  verifyDataset,
+  registering
+} = useSealTrust();
+```
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `getAllDatasets()` | Fetch all registered datasets |
+| `getDatasetDetails(id)` | Get details for specific dataset |
+| `getDatasetsByOwner(address)` | Get datasets by owner address |
+| `verifyDataset(hash)` | Check if hash exists in registry |
+
+### useNautilus
+
+Hook for Nautilus TEE interactions.
+
+```typescript
+import { useNautilus } from '@/hooks/useNautilus';
+
+const {
+  verifyMetadata,
+  checkHealth,
+  getAttestation,
+  state
+} = useNautilus();
+```
+
+**Methods:**
+
+| Method | Description |
+|--------|-------------|
+| `verifyMetadata(metadata)` | Get TEE verification signature |
+| `checkHealth()` | Check Nautilus service status |
+| `getAttestation()` | Get enclave attestation |
+
+## Walrus Storage
+
+### Upload Blob
+
+```typescript
+const response = await fetch('https://publisher.walrus-testnet.walrus.space/v1/blobs', {
+  method: 'PUT',
+  body: encryptedData,
+  headers: {
+    'Content-Type': 'application/octet-stream'
+  }
+});
+
+const { blobId } = await response.json();
+```
+
+### Fetch Blob
+
+```typescript
+const response = await fetch(
+  `https://aggregator.walrus-testnet.walrus.space/v1/blobs/${blobId}`
+);
+const encryptedData = await response.arrayBuffer();
+```
+
+## Seal Encryption
+
+### Create Session Key
+
+```typescript
+import { SealClient } from '@mysten/seal';
+
+const sealClient = new SealClient({
+  suiClient,
+  serverObjectIds: SEAL_KEY_SERVERS,
+  verifyKeyServers: false,
+});
+
+const sessionKey = await sealClient.createSessionKey({
+  address: walletAddress,
+  packageId: SEAL_PACKAGE_ID,
+  ttlMin: 10,
+});
+```
+
+### Encrypt Data
+
+```typescript
+const { encryptedObject } = await sealClient.encrypt({
+  threshold: 2,
+  packageId: SEAL_PACKAGE_ID,
+  id: policyId,
+  data: dataToEncrypt,
+});
+```
+
+### Decrypt Data
+
+```typescript
+const decrypted = await sealClient.decrypt({
+  data: encryptedData,
+  sessionKey,
+  txBytes,
+});
+```
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| `WALLET_NOT_CONNECTED` | No wallet connection |
+| `NAUTILUS_UNAVAILABLE` | TEE service offline |
+| `TRANSACTION_FAILED` | Sui transaction failed |
+| `NOT_FOUND` | Dataset not in registry |
+| `HASH_MISMATCH` | Hash verification failed |

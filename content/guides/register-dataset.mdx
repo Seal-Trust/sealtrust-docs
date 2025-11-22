@@ -1,0 +1,114 @@
+---
+title: Register a Dataset
+---
+
+# Register a Dataset
+
+This guide walks you through registering a dataset on SealTrust.
+
+## Prerequisites
+
+- Connected Sui wallet with testnet SUI
+- Dataset file (max 100MB)
+
+## Step-by-Step Guide
+
+import { Steps } from 'nextra/components'
+
+<Steps>
+
+### Navigate to Register Page
+
+Go to [sealtrust.app/register](https://sealtrust.app/register) and ensure your wallet is connected.
+
+### Choose Input Method
+
+Select how you want to provide your dataset:
+
+- **Upload File** - Select a file from your computer
+- **Enter URL** - Provide a publicly accessible URL
+
+### Upload Your Dataset
+
+Click "Choose File" or enter your dataset URL. Supported formats:
+- CSV, JSON, Parquet, AVRO, TSV, XML, HDF5, ZARR
+
+### Fill Dataset Details
+
+Provide metadata for your dataset:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| **Name** | Display name | "ImageNet Training Set v1" |
+| **Description** | Brief description | "1000-class image dataset for CNN training" |
+| **Format** | File format | "PARQUET" |
+
+### Configure Access Control
+
+Choose who can decrypt your dataset:
+
+- **Owner Only** - Only you can decrypt
+- **Specific Addresses** - Add wallet addresses to allowlist
+
+> [!TIP]
+> You can add more addresses later from the dataset management page.
+
+### Review & Confirm
+
+Review the transaction details:
+
+```
+Dataset: my-dataset.csv
+Hash: 0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730
+Size: 15.2 MB
+Format: CSV
+Access: Owner + 2 addresses
+```
+
+### Sign Transaction
+
+Click "Register Dataset" and approve the transaction in your wallet.
+
+The registration process:
+1. Creates Seal allowlist for access control
+2. Encrypts dataset with Seal
+3. Uploads encrypted blob to Walrus
+4. Gets TEE verification from Nautilus
+5. Mints DatasetNFT on Sui
+
+### Done!
+
+Your dataset is now registered! You'll receive:
+
+- **Dataset NFT ID** - Unique identifier on Sui
+- **Transaction Digest** - Proof of registration
+- **Verification URL** - Shareable link
+
+</Steps>
+
+## Understanding the Output
+
+After successful registration:
+
+```json
+{
+  "datasetId": "0x1234...abcd",
+  "transactionDigest": "ABC123...",
+  "walrusBlobId": "xyz789...",
+  "sealPolicyId": "policy_001...",
+  "hash": "0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730"
+}
+```
+
+## Verification
+
+Anyone can verify your dataset by:
+
+1. Computing the hash of their copy
+2. Searching on the [Verify page](https://sealtrust.app/verify)
+3. Comparing the on-chain record
+
+## Next Steps
+
+- [Manage Access](/guides/manage-access) - Add or remove authorized addresses
+- [Download & Decrypt](/guides/download-decrypt) - Retrieve your dataset

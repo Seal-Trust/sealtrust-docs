@@ -1,0 +1,77 @@
+---
+title: Verify a Dataset
+---
+
+# Verify a Dataset
+
+Learn how to verify if a dataset has been registered on SealTrust.
+
+## Why Verify?
+
+Verification confirms:
+- The dataset exists in the SealTrust registry
+- The data hasn't been tampered with
+- When and by whom it was registered
+
+## Verification Methods
+
+### Method 1: Upload File
+
+1. Go to [sealtrust.app/verify](https://sealtrust.app/verify)
+2. Select "Upload File"
+3. Choose your dataset file
+4. Click "Compute Hash & Verify"
+
+The system computes the SHA-256 hash and searches the blockchain.
+
+### Method 2: Enter URL
+
+1. Go to [sealtrust.app/verify](https://sealtrust.app/verify)
+2. Select "Enter URL"
+3. Paste the dataset URL
+4. Click "Compute Hash & Verify"
+
+### Method 3: Enter Hash
+
+If you already have the hash:
+
+1. Go to [sealtrust.app/verify](https://sealtrust.app/verify)
+2. Select "Enter Hash"
+3. Paste the 64-character SHA-256 hash
+4. Verification runs automatically
+
+## Understanding Results
+
+### Dataset Found
+
+```
+Status: VERIFIED
+Name: ImageNet Training Set v1
+Format: PARQUET
+Size: 15.2 MB
+Registered: Nov 22, 2025
+Owner: 0x1234...abcd
+```
+
+This means the exact dataset exists in the registry.
+
+### Dataset Not Found
+
+```
+Status: NOT FOUND
+Hash: 0x7d865e...
+```
+
+This means either:
+- The dataset was never registered
+- The file has been modified (different hash)
+
+## Sharing Verification Links
+
+Share a direct verification link:
+
+```
+https://sealtrust.app/verify?hash=0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730
+```
+
+Anyone can click this link to verify the dataset.

@@ -1,0 +1,79 @@
+---
+title: Getting Started
+---
+
+# Getting Started with SealTrust
+
+This guide will help you get started with SealTrust, whether you're a dataset owner looking to register and protect your data, or a developer wanting to integrate with the platform.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- A **Sui wallet** (Sui Wallet, Suiet, or Ethos)
+- Some **testnet SUI** for gas fees ([Sui Faucet](https://faucet.sui.io))
+- A dataset file (CSV, JSON, Parquet, etc.)
+
+## Quick Start
+
+import { Steps } from 'nextra/components'
+
+<Steps>
+
+### Connect Your Wallet
+
+Visit [sealtrust.app](https://sealtrust.app) and click "Connect Wallet" to connect your Sui wallet. Make sure you're on **Sui Testnet**.
+
+### Register a Dataset
+
+1. Navigate to the **Register** page
+2. Upload your dataset file or provide a URL
+3. The system will compute the SHA-256 hash
+4. Configure access control (who can decrypt)
+5. Sign the transaction to register on-chain
+
+### Verify a Dataset
+
+1. Navigate to the **Verify** page
+2. Upload a file, enter a URL, or paste a hash
+3. The system will search the blockchain registry
+4. View verification details if found
+
+### Download & Decrypt
+
+If you have access to an encrypted dataset:
+
+1. Navigate to the dataset page
+2. Click "Download & Decrypt"
+3. Sign the session key request
+4. The decrypted file will download
+
+</Steps>
+
+## Supported File Formats
+
+SealTrust supports the following dataset formats:
+
+- **CSV** - Comma-separated values
+- **JSON** - JavaScript Object Notation
+- **Parquet** - Apache Parquet columnar format
+- **AVRO** - Apache Avro serialization
+- **TSV** - Tab-separated values
+- **XML** - Extensible Markup Language
+- **HDF5** - Hierarchical Data Format
+- **ZARR** - Chunked, compressed N-dimensional arrays
+
+## File Size Limits
+
+| Tier | Max File Size |
+|------|---------------|
+| Standard | 100 MB |
+
+> [!NOTE]
+> Larger file support is coming in future releases.
+
+## Next Steps
+
+- [Installation Guide](/getting-started/installation) - Set up local development
+- [Architecture Overview](/architecture) - Understand how SealTrust works
+- [Register Your First Dataset](/guides/register-dataset) - Step-by-step guide

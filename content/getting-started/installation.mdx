@@ -1,0 +1,83 @@
+---
+title: Installation
+---
+
+# Installation
+
+This guide covers setting up SealTrust for local development.
+
+## Frontend Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/Seal-Trust/sealtrust-frontend.git
+cd sealtrust-frontend
+
+# Install dependencies
+pnpm install
+
+# Copy environment variables
+cp .env.example .env.local
+
+# Start development server
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash filename=".env.local"
+# Sui Network
+NEXT_PUBLIC_SUI_NETWORK=testnet
+
+# SealTrust Package ID (Sui Testnet)
+NEXT_PUBLIC_VERIFICATION_PACKAGE=0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e
+
+# Enclave ID
+NEXT_PUBLIC_ENCLAVE_ID=0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec
+
+# Nautilus TEE Endpoint
+NEXT_PUBLIC_NAUTILUS_URL=https://nautilus.sealtrust.app
+
+# Seal Package ID
+NEXT_PUBLIC_SEAL_PACKAGE_ID=0x705937d7b0ffc7c37aa23a445ed52ae521a47adcdffa27fe965e0b73464a9925
+```
+
+## Smart Contracts Setup
+
+```bash
+# Clone the contracts repository
+git clone https://github.com/Seal-Trust/sealtrust-contracts.git
+cd sealtrust-contracts
+
+# Build contracts
+sui move build
+
+# Run tests
+sui move test
+
+# Deploy to testnet
+sui client publish --gas-budget 100000000
+```
+
+## Nautilus Enclave Setup
+
+> [!WARNING]
+> Running the enclave locally requires special setup. For most use cases, use the hosted endpoint at `https://nautilus.sealtrust.app`.
+
+```bash
+# Clone the enclave repository
+git clone https://github.com/Seal-Trust/sealtrust-enclave.git
+cd sealtrust-enclave
+
+# Build the enclave
+cargo build --release
+
+# Run locally (dev mode)
+cargo run --release
+```
+
+See the [Enclave Deployment Guide](/guides/enclave-deployment) for production setup on AWS Nitro.
