@@ -38,6 +38,10 @@ export default {
         title: 'GitHub',
         href: 'https://github.com/Seal-Trust',
       },
+      twitter: {
+        title: 'X (Twitter)',
+        href: 'https://x.com/sealtrust',
+      },
     },
   },
 }
