@@ -1,0 +1,139 @@
+---
+title: Verify Deployment
+---
+
+# Verify Deployment
+
+This guide shows how to verify that SealTrust contracts and enclave are properly deployed and running.
+
+## Quick Verification
+
+```bash
+# 1. Check enclave is running
+curl https://nautilus.sealtrust.app/health
+# Returns: "OK"
+
+# 2. Verify package exists on-chain
+sui client object 0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e
+```
+
+## Step-by-Step Verification
+
+import { Steps } from 'nextra/components'
+
+<Steps>
+
+### Verify Package Deployment
+
+Check that the SealTrust verification package exists on Sui Testnet:
+
+```bash
+sui client object 0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e
+```
+
+Or view on explorer: [SealTrust Package on SuiVision](https://testnet.suivision.xyz/package/0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e)
+
+### Verify EnclaveConfig Has Real PCRs
+
+The EnclaveConfig stores the PCR measurements that validate the enclave:
+
+```bash
+sui client object 0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32
+```
+
+Expected PCR values:
+
+| PCR | Value |
+|-----|-------|
+| **PCR0** | `b13c459767dfa980fc070317cced783437b0198963564bd5f906a5b35f209f8104e1ddbc64ad0615842c6a243e0b6758` |
+| **PCR1** | `b13c459767dfa980fc070317cced783437b0198963564bd5f906a5b35f209f8104e1ddbc64ad0615842c6a243e0b6758` |
+| **PCR2** | `21b9efbc184807662e966d34f390821309eeac6802309798826296bf3e8bec7c10edb30948c90ba67310f7b964fc500a` |
+
+### Verify Enclave is Running
+
+Test the health endpoint:
+
+```bash
+curl https://nautilus.sealtrust.app/health
+# Returns: "OK"
+```
+
+Full health check:
+
+```bash
+curl https://nautilus.sealtrust.app/health_check
+```
+
+### Verify PCR Values Match
+
+Get the live attestation from the enclave and compare PCRs:
+
+```bash
+curl https://nautilus.sealtrust.app/get_attestation | jq '.pcrs'
+```
+
+The returned PCR values should match those registered on-chain in the EnclaveConfig.
+
+### Verify Enclave Object
+
+The Enclave object contains the public key used for signature verification:
+
+```bash
+sui client object 0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec
+```
+
+Or view on explorer: [Enclave Object on SuiVision](https://testnet.suivision.xyz/object/0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec)
+
+</Steps>
+
+## Deployed Contract Addresses
+
+### Packages
+
+| Package | ID | Explorer |
+|---------|-----|----------|
+| **SealTrust Verification** | `0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e` | [View](https://testnet.suivision.xyz/package/0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e) |
+| **Seal Allowlist** | `0x705937d7b0ffc7c37aa23a445ed52ae521a47adcdffa27fe965e0b73464a9925` | [View](https://testnet.suivision.xyz/package/0x705937d7b0ffc7c37aa23a445ed52ae521a47adcdffa27fe965e0b73464a9925) |
+| **Enclave (Mysten Labs)** | `0x0ff344b5b6f07b79b56a4ce1e9b1ef5a96ba219f6e6f2c49f194dee29dfc8b7f` | [View](https://testnet.suivision.xyz/package/0x0ff344b5b6f07b79b56a4ce1e9b1ef5a96ba219f6e6f2c49f194dee29dfc8b7f) |
+
+### Objects
+
+| Object | ID | Explorer |
+|--------|-----|----------|
+| **EnclaveConfig** | `0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32` | [View](https://testnet.suivision.xyz/object/0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32) |
+| **Enclave** | `0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec` | [View](https://testnet.suivision.xyz/object/0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec) |
+
+## Transaction History
+
+| Action | Transaction Digest | Date |
+|--------|-------------------|------|
+| Publish SealTrust Package | `CLPTKZW9Kxf2JXWkQxfU8b9FQXVwNAkvioWm5d6knoVb` | 2025-11-22 |
+| Update PCRs | `6xDy1W8M4SRocEpDvch8tNRMfLR6Qq1UR8VWEX5Rjhu5` | 2025-11-22 |
+| Register Enclave | `AHKzdwZgrvMEkRq838afr7KVEHKxtpN1fw1oUhQRPiJf` | 2025-11-22 |
+
+## Troubleshooting
+
+### "Object not found"
+
+If `sui client object` returns "Object not found":
+- Ensure you're connected to testnet: `sui client switch --env testnet`
+- Verify the object ID is correct
+
+### Health check fails
+
+If the health endpoint doesn't respond:
+- Check if the enclave is running on AWS
+- Verify Cloudflare Tunnel is active
+- Check instance security groups allow traffic
+
+### PCR mismatch
+
+If PCR values don't match:
+- The enclave may have been rebuilt with new code
+- Check if EnclaveConfig was updated on-chain
+- Contact the SealTrust team for verification
+
+## Next Steps
+
+- [Enclave Deployment](/guides/enclave-deployment) - Deploy your own enclave
+- [Register a Dataset](/guides/register-dataset) - Start using SealTrust

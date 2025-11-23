@@ -4,4 +4,6 @@ export default {
   'verify-dataset': 'Verify a Dataset',
   'manage-access': 'Manage Access',
   'download-decrypt': 'Download & Decrypt',
+  'enclave-deployment': 'Enclave Deployment',
+  'verify-deployment': 'Verify Deployment',
 }

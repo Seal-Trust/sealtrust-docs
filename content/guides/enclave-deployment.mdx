@@ -1,0 +1,219 @@
+---
+title: Enclave Deployment
+---
+
+# Enclave Deployment Guide
+
+This guide covers deploying and configuring the SealTrust Nautilus enclave on AWS Nitro.
+
+## Overview
+
+The Nautilus enclave runs inside AWS Nitro Enclaves, providing hardware-isolated execution for dataset metadata verification. Even AWS administrators cannot access the code or data inside the enclave.
+
+## Current Production Deployment
+
+### AWS Infrastructure
+
+| Property | Value |
+|----------|-------|
+| **Public URL** | [`https://nautilus.sealtrust.app`](https://nautilus.sealtrust.app) |
+| **Instance Type** | `m5a.xlarge` |
+| **Region** | `ap-northeast-1` |
+| **Enclave CID** | `22` |
+| **Memory** | `1024 MiB` |
+| **CPUs** | `2` |
+
+### On-Chain Objects
+
+| Object | ID | Explorer |
+|--------|-----|----------|
+| **Enclave** | `0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec` | [View on SuiVision](https://testnet.suivision.xyz/object/0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec) |
+| **EnclaveConfig** | `0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32` | [View on SuiVision](https://testnet.suivision.xyz/object/0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32) |
+
+## PCR Measurements
+
+PCR (Platform Configuration Register) values prove the exact code running inside the TEE. These values are registered on-chain and verified during attestation.
+
+```
+PCR0: b13c459767dfa980fc070317cced783437b0198963564bd5f906a5b35f209f8104e1ddbc64ad0615842c6a243e0b6758
+PCR1: b13c459767dfa980fc070317cced783437b0198963564bd5f906a5b35f209f8104e1ddbc64ad0615842c6a243e0b6758
+PCR2: 21b9efbc184807662e966d34f390821309eeac6802309798826296bf3e8bec7c10edb30948c90ba67310f7b964fc500a
+```
+
+| PCR | Description |
+|-----|-------------|
+| **PCR0** | Enclave image file hash |
+| **PCR1** | Linux kernel hash |
+| **PCR2** | Application binary hash |
+
+> [!NOTE]
+> If you rebuild the enclave image, the PCR values will change and must be updated on-chain.
+
+## Deployment Steps
+
+import { Steps } from 'nextra/components'
+
+<Steps>
+
+### Prerequisites
+
+- AWS account with Nitro Enclaves enabled
+- EC2 instance (`m5.xlarge` or larger with Nitro support)
+- Docker installed
+- AWS Nitro CLI installed
+- Sui CLI installed
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/Seal-Trust/sealtrust-enclave
+cd sealtrust-enclave
+```
+
+### Build the Enclave Image
+
+```bash
+make build
+```
+
+This creates the `.eif` (Enclave Image File) in `out/nitro.eif`.
+
+### Get PCR Measurements
+
+After building, extract the PCR values:
+
+```bash
+make pcrs
+```
+
+Save these values - you'll need them for on-chain registration.
+
+### Run the Enclave
+
+```bash
+make run
+```
+
+Or for debug mode with console output:
+
+```bash
+make run-debug
+```
+
+### Verify Enclave is Running
+
+```bash
+# Check enclave status
+make status
+
+# Test health endpoint
+curl http://localhost:3000/health
+```
+
+### Register On-Chain
+
+Register the enclave and its PCR values on Sui:
+
+```bash
+sui client call \
+  --package 0x0ff344b5b6f07b79b56a4ce1e9b1ef5a96ba219f6e6f2c49f194dee29dfc8b7f \
+  --module enclave \
+  --function register \
+  --args <enclave_config_id> <pcr0> <pcr1> <pcr2> \
+  --gas-budget 100000000
+```
+
+### Configure Cloudflare Tunnel (Optional)
+
+For HTTPS access, set up Cloudflare Tunnel:
+
+```bash
+cloudflared tunnel create nautilus
+cloudflared tunnel route dns nautilus nautilus.yourdomain.com
+```
+
+</Steps>
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Simple health check |
+| `/health_check` | GET | Full health check with endpoint status |
+| `/get_attestation` | GET | Get NSM attestation document with PCRs |
+| `/verify_metadata` | POST | Verify and sign dataset metadata |
+
+### Test the Endpoints
+
+```bash
+# Health check
+curl https://nautilus.sealtrust.app/health
+# Returns: "OK"
+
+# Get attestation (returns PCRs + public key)
+curl https://nautilus.sealtrust.app/get_attestation
+```
+
+## Systemd Service Setup
+
+For production, run the enclave as a systemd service:
+
+```ini filename="/etc/systemd/system/nautilus.service"
+[Unit]
+Description=SealTrust Nautilus Enclave
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/nitro-cli run-enclave --eif-path /home/ec2-user/sealtrust-enclave/out/nitro.eif --cpu-count 2 --memory 1024
+ExecStop=/usr/bin/nitro-cli terminate-enclave --all
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl enable nautilus
+sudo systemctl start nautilus
+```
+
+## Troubleshooting
+
+### Enclave Won't Start
+
+```bash
+# Check if Nitro Enclaves are enabled
+nitro-cli describe-enclaves
+
+# Check available resources
+cat /sys/module/nitro_enclaves/parameters/ne_cpus
+```
+
+### PCR Mismatch
+
+If attestation fails with PCR mismatch:
+
+1. Rebuild the enclave image
+2. Extract new PCR values
+3. Update on-chain EnclaveConfig with new PCRs
+
+### Connection Refused
+
+Ensure the vsock proxy is running:
+
+```bash
+vsock-proxy 3000 127.0.0.1 3000 &
+```
+
+## Security Considerations
+
+- **Ephemeral Keys**: Enclave keys are regenerated on each boot
+- **No Persistence**: Enclaves have no persistent storage
+- **Attestation**: Always verify PCR values match on-chain records
+- **Network Isolation**: Enclaves communicate only via vsock
+
+## Next Steps
+
+- [Verify Deployment](/guides/verify-deployment) - Verify your enclave setup
+- [Smart Contracts](/contracts) - On-chain integration details
