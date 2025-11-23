@@ -73,7 +73,7 @@ cd sealtrust-enclave
 ### Build the Enclave Image
 
 ```bash
-make build
+make -f Makefile.aws build
 ```
 
 This creates the `.eif` (Enclave Image File) in `out/nitro.eif`.
@@ -83,7 +83,7 @@ This creates the `.eif` (Enclave Image File) in `out/nitro.eif`.
 After building, extract the PCR values:
 
 ```bash
-make pcrs
+make -f Makefile.aws pcrs
 ```
 
 Save these values - you'll need them for on-chain registration.
@@ -91,20 +91,20 @@ Save these values - you'll need them for on-chain registration.
 ### Run the Enclave
 
 ```bash
-make run
+make -f Makefile.aws run
 ```
 
 Or for debug mode with console output:
 
 ```bash
-make run-debug
+make -f Makefile.aws run-debug
 ```
 
 ### Verify Enclave is Running
 
 ```bash
 # Check enclave status
-make status
+make -f Makefile.aws status
 
 # Test health endpoint
 curl http://localhost:3000/health
