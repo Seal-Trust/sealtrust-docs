@@ -20,6 +20,9 @@ export default {
   'api-reference': {
     title: 'API Reference',
   },
+  faq: {
+    title: 'FAQ',
+  },
   '---': {
     type: 'separator',
   },

@@ -1,0 +1,277 @@
+---
+title: FAQ
+---
+
+# Frequently Asked Questions
+
+Common questions about SealTrust answered in plain language.
+
+## General Questions
+
+### What is SealTrust?
+
+SealTrust is a **cryptographic verification and encrypted storage platform** for AI training datasets. It provides a way to prove that a dataset is authentic, unmodified, and stored securely - all without requiring trust in any single party.
+
+Think of it like a notary service for data, but instead of trusting a person, you trust math (cryptography) and hardware (secure enclaves).
+
+### What problem does SealTrust solve?
+
+**The trust problem in AI data.**
+
+When you download a dataset for AI training, how do you know:
+- It hasn't been tampered with?
+- It's the same data the uploader originally shared?
+- Only authorized people can access it?
+
+SealTrust solves this by:
+1. **Hashing** the original data (creating a unique fingerprint)
+2. **Encrypting** it so only authorized wallets can access it
+3. **Verifying** the metadata in a secure hardware environment
+4. **Recording** everything on-chain as an immutable record
+
+### Is SealTrust a marketplace?
+
+**No.** SealTrust is a verification and storage platform, not a marketplace.
+
+We don't facilitate buying or selling datasets. We provide the infrastructure to:
+- Prove dataset authenticity
+- Store datasets securely
+- Control who can access them
+
+You can think of us as the "trust layer" that marketplaces or data providers can build on top of.
+
+### Who is SealTrust for?
+
+- **AI Researchers** who need to verify training data integrity
+- **Data Providers** who want to prove their datasets are authentic
+- **Organizations** that need auditable data provenance
+- **Anyone** who needs secure, verifiable data storage
+
+---
+
+## How It Works
+
+### What happens when I register a dataset?
+
+Here's the 6-step process in plain English:
+
+| Step | What Happens | Why It Matters |
+|------|--------------|----------------|
+| 1. **Hash** | We calculate a SHA-256 hash of your original (unencrypted) file | Creates a unique fingerprint - if even one byte changes, the hash changes |
+| 2. **Encrypt** | Your file is encrypted using Seal | Only wallets you authorize can decrypt it |
+| 3. **Upload** | The encrypted file goes to Walrus | Decentralized storage - no single point of failure |
+| 4. **Verify** | Metadata is verified inside a TEE (Trusted Execution Environment) | Hardware-backed proof that verification was done correctly |
+| 5. **Record** | A DatasetNFT is created on Sui blockchain | Immutable record that can never be altered |
+| 6. **Access** | Authorized users can download and decrypt | Only wallets on your allowlist can access the data |
+
+### What is a TEE?
+
+**TEE** stands for **Trusted Execution Environment**. It's a secure area of a processor that:
+- Runs code in isolation from the rest of the system
+- Cannot be accessed by the operating system, hypervisor, or even the cloud provider
+- Produces cryptographic proof (attestation) of what code is running
+
+SealTrust uses **AWS Nitro Enclaves**, Amazon's TEE technology. When we verify your dataset metadata, even AWS employees cannot see or tamper with the process.
+
+### What are PCR measurements?
+
+**PCR** stands for **Platform Configuration Register**. These are cryptographic hashes that prove exactly what code is running inside the TEE.
+
+| PCR | What It Measures |
+|-----|------------------|
+| **PCR0** | Hash of the enclave image file |
+| **PCR1** | Hash of the Linux kernel |
+| **PCR2** | Hash of the application binary |
+
+Before trusting a verification, you can check that the PCR values match what's registered on-chain. This proves the enclave is running the exact code we published.
+
+### What is Seal encryption?
+
+**Seal** is a threshold encryption system built for Sui. Instead of a single key that could be stolen, Seal splits the decryption capability across multiple independent servers.
+
+Key features:
+- **Threshold decryption**: Need 2 out of 3 servers to decrypt (configurable)
+- **On-chain access control**: Your smart contract decides who can decrypt
+- **No single point of failure**: Even if one server is compromised, data stays safe
+
+### What is Walrus?
+
+**Walrus** is a decentralized storage network. Unlike traditional cloud storage:
+- No single company controls your data
+- Data is split across many nodes
+- You get a unique `blob_id` to retrieve your data later
+
+SealTrust stores encrypted datasets on Walrus, so even the storage providers can't read your data.
+
+---
+
+## Security Questions
+
+### Can SealTrust read my data?
+
+**No.** Your data is encrypted before it leaves your browser. We never see the unencrypted content.
+
+The encryption flow:
+1. You select a file in your browser
+2. Browser calculates hash of original file
+3. Browser encrypts the file with Seal
+4. Only the encrypted blob is uploaded
+
+### Can AWS access data in the enclave?
+
+**No.** AWS Nitro Enclaves are designed so that even AWS administrators cannot access the memory or code inside a running enclave.
+
+The enclave:
+- Has no persistent storage
+- Cannot be debugged in production
+- Communicates only through a secure channel (vsock)
+- Generates fresh keys on every boot
+
+### What if SealTrust disappears?
+
+Your data is safe because:
+
+1. **Encrypted data is on Walrus** - decentralized storage that doesn't depend on us
+2. **Records are on Sui blockchain** - immutable and public
+3. **Seal keys are distributed** - no single party controls decryption
+
+The only thing you'd lose is the verification service. Your data and access control would continue to work.
+
+### What if someone gets the original hash?
+
+The hash is public - it's stored on-chain. **This is intentional.**
+
+A hash lets you verify data, but it doesn't let you recreate the data. Think of it like a fingerprint - knowing someone's fingerprint doesn't tell you what they look like.
+
+---
+
+## Technical Questions
+
+### What blockchain does SealTrust use?
+
+**Sui** - a high-performance Layer 1 blockchain. We chose Sui because:
+- Fast finality (transactions confirm in ~500ms)
+- Low gas fees
+- Native support for complex objects (our DatasetNFT)
+- Great developer tooling (Move language)
+
+### What are the on-chain objects?
+
+| Object | Purpose | ID |
+|--------|---------|-----|
+| **SealTrust Package** | Main smart contract | [`0xcdc25...e4e`](https://testnet.suivision.xyz/package/0xcdc25c90e328f2905c97c01e90424395dd7b10e67769fc8f4ae62b87f1e63e4e) |
+| **Seal Allowlist** | Access control logic | [`0x70593...925`](https://testnet.suivision.xyz/package/0x705937d7b0ffc7c37aa23a445ed52ae521a47adcdffa27fe965e0b73464a9925) |
+| **EnclaveConfig** | Registered PCR values | [`0x55d6a...c32`](https://testnet.suivision.xyz/object/0x55d6a15a5e8822b39f76dc53031d83beddc1e5b0e3ef804b82e8d4bfe4fbdc32) |
+| **Enclave** | Enclave public key | [`0x611b8...5ec`](https://testnet.suivision.xyz/object/0x611b83f2b4d97471a6c164877ff23a2f0570806baf3d9380d1f11433a2b685ec) |
+
+### How do I verify a dataset?
+
+1. **Get the original file** from the data provider
+2. **Calculate its SHA-256 hash** (use any standard tool)
+3. **Compare** with the `original_hash` stored on-chain
+
+If they match, the file is authentic and unmodified.
+
+```bash
+# Example: Calculate hash on Mac/Linux
+shasum -a 256 myfile.csv
+```
+
+### What file formats are supported?
+
+Any file format works. SealTrust doesn't care about file contents - we hash and encrypt any binary data.
+
+Common use cases:
+- CSV, JSON, Parquet (tabular data)
+- Images (PNG, JPEG, etc.)
+- Text files
+- Archives (ZIP, TAR)
+
+### Is there a file size limit?
+
+The practical limits depend on:
+- **Walrus**: Currently handles files up to several GB
+- **Browser**: Large files may be slow to hash/encrypt in-browser
+
+For very large datasets, consider splitting into chunks.
+
+---
+
+## Usage Questions
+
+### Do I need a wallet?
+
+**Yes.** You need a Sui-compatible wallet to:
+- Sign transactions
+- Register datasets
+- Access encrypted data
+
+Recommended wallets:
+- [Sui Wallet](https://chrome.google.com/webstore/detail/sui-wallet/)
+- [Suiet](https://suiet.app/)
+- [Ethos](https://ethoswallet.xyz/)
+
+### How much does it cost?
+
+Costs include:
+- **Sui gas fees** - typically a few cents per transaction
+- **Walrus storage fees** - depends on file size and storage duration
+- **SealTrust** - currently free during testnet
+
+### Is this on mainnet?
+
+**Not yet.** SealTrust is currently deployed on **Sui Testnet**.
+
+Testnet means:
+- Free to use (testnet SUI has no real value)
+- May have bugs or downtime
+- Data may be wiped during upgrades
+
+We'll announce mainnet launch when ready.
+
+### How do I get testnet SUI?
+
+Use the Sui faucet:
+1. Go to [faucet.sui.io](https://faucet.sui.io)
+2. Connect your wallet
+3. Request testnet SUI
+
+Or use the CLI:
+```bash
+sui client faucet
+```
+
+---
+
+## Troubleshooting
+
+### "Nautilus unavailable" error
+
+The TEE verification service might be down. Check:
+1. [Status page](https://nautilus.sealtrust.app/health) - should return "OK"
+2. Try again in a few minutes
+3. Contact us if it persists
+
+### Transaction failed
+
+Common causes:
+- **Insufficient gas** - get more testnet SUI from faucet
+- **Network congestion** - try again
+- **Invalid signature** - the TEE signature didn't verify (rare)
+
+### Hash mismatch when verifying
+
+If your calculated hash doesn't match the on-chain hash:
+- The file has been modified
+- You're hashing the encrypted file instead of the original
+- The file was corrupted during download
+
+---
+
+## More Questions?
+
+- **GitHub Issues**: [github.com/Seal-Trust](https://github.com/Seal-Trust)
+- **Documentation**: You're already here!
+- **Launch App**: [sealtrust.app](https://sealtrust.app)
+
+Can't find your answer? Open an issue on GitHub and we'll add it to this FAQ.
