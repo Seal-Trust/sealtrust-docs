@@ -43,7 +43,7 @@ export default {
       },
       twitter: {
         title: 'X (Twitter)',
-        href: 'https://x.com/sealtrust',
+        href: 'https://x.com/seal_trust',
       },
     },
   },
